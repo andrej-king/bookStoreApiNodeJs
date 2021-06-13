@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  mongodb_container:
+    image: mongo:3.6
+    container_name: mongodb
+    restart: always
+    #    user: '1000:1000'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+      - MONGO_INITDB_DATABASE=shopApi
+    ports:
+      - 27017:27017
+    networks:
+      mongodb:
+    volumes:
+      - ./mongodb/data:/data/db
+
+
+
+networks:
+  mongodb:
+    name: mongodb
+    driver: bridge
