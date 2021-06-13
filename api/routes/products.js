@@ -64,7 +64,17 @@ router.get('/:productId', (req, res, next) => {
 
 router.patch('/:productId', (req, res, next) => {
     const id = req.params.productId;
-    Product.findByIdAndUpdate({_id: id}, {name: req.body.name.trim(), price: req.body.price})
+    const updateOps = {};
+
+    // flexible update values
+    for (const ops of req.body) {
+        updateOps[ops.propName] = ops.value;
+    }
+    // write format
+    /*[
+        {"propName": "name", "value": "Harry Potter 3"}
+    ]*/
+    Product.findByIdAndUpdate({_id: id}, updateOps)
         .then(result => {
             if (result) {
                 res.status(200).json({
