@@ -2,27 +2,43 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const multer = require('multer'); // package for save images
+const allowMimeTypes = ['image/jpg', 'image/jpeg', 'image/png'];
 const path = require('path');
 
-// not working on windows
-/*const storage = multer.diskStorage({
+const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '../images'));
+        cb(null, './uploads');
     },
+
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
-});*/
+});
 
-// const upload = multer({ storage: storage })
-const upload = multer({ dest: 'uploads/' })
+const fileFilter = (req, file, cb) => {
+    if (allowMimeTypes.indexOf(file.mimetype) > 0) {
+        cb(null, true); // save file
+    } else {
+        // cb(null, false); // not save file without errors
+        cb(new Error('Wrong file format'), false); // not save file
+    }
+}
+
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 1024 * 1024 * 5 // 5 mb
+    },
+    fileFilter: fileFilter
+});
 
 const Product = require('../models/product');
 
 router.get('/', (req, res, next) => {
     Product.find()
-        .select('name price _id')
+        .select('_id name price productImage')
         .then(docs => {
             const response = {
                 count: docs.length,
@@ -31,6 +47,7 @@ router.get('/', (req, res, next) => {
                        _id: doc._id,
                        name: doc.name,
                        price: doc.price,
+                       productImage: doc.productImage,
                        request: {
                            type: 'GET',
                            url: 'http://localhost:3000/products/' + doc._id
@@ -54,10 +71,18 @@ router.get('/', (req, res, next) => {
 });
 
 router.post('/', upload.single('productImage'), (req, res, next) => {
+    if (typeof req.file === 'undefined') {
+        return res.status(500).json({
+            error: 'File field is empty'
+        });
+    }
+    console.log(req.file);
+
     const product = new Product({
         _id: new mongoose.Types.ObjectId(),
         name: req.body.name,
-        price: req.body.price
+        price: req.body.price,
+        productImage: req.file.filename
     });
     product.save()
         .then(result => {
@@ -67,6 +92,7 @@ router.post('/', upload.single('productImage'), (req, res, next) => {
                     name: result.name,
                     price: result.price,
                     _id: result._id,
+                    productImage: result.productImage,
                     request: {
                         type: 'GET',
                         url: 'http://localhost:3000/products/' + result._id
@@ -85,7 +111,7 @@ router.post('/', upload.single('productImage'), (req, res, next) => {
 router.get('/:productId', (req, res, next) => {
     const id = req.params.productId;
     Product.findById(id)
-        .select('name price _id')
+        .select('_id name price productImage')
         .then(docs => {
             console.log(docs);
             if (docs) {

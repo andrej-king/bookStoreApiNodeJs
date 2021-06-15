@@ -16,6 +16,7 @@ mongoose.connect('mongodb://localhost:27017/shopApi', {
 });
 
 app.use(morgan('dev'));
+app.use('/uploads', express.static('uploads')); // get image http://localhost:3000/uploads/filename
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
