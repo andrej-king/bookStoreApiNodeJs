@@ -25,7 +25,6 @@ const fileFilter = (req, file, cb) => {
     }
 }
 
-
 const upload = multer({
     storage: storage,
     limits: {
@@ -76,7 +75,6 @@ router.post('/', upload.single('productImage'), (req, res, next) => {
             error: 'File field is empty'
         });
     }
-    console.log(req.file);
 
     const product = new Product({
         _id: new mongoose.Types.ObjectId(),
