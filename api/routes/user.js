@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt'); // for crypt password
+const jwt = require('jsonwebtoken'); // for web token (auth)
 
 const User = require('../models/user');
 
@@ -56,8 +57,18 @@ router.post('/login', (req, res, next) => {
 
             bcrypt.compare(req.body.password.trim(), user.password, (err, compareResult) => {
                 if (!err && compareResult) {
+                    const token = jwt.sign({
+                            email: user.email,
+                            userId: user._id
+                        },
+                        process.env.JWT_KET,
+                        {
+                            expiresIn: "24h"
+                        }
+                    );
                     return res.status(200).json({
-                        message: 'Auth success'
+                        message: 'Auth success',
+                        token: token
                     });
                 }
 
@@ -78,7 +89,7 @@ router.delete('/:userId', (req, res, next) => {
     User.findByIdAndDelete(id)
         .then(result => {
             res.status(200).json({
-               message: 'User deleted'
+                message: 'User deleted'
             });
         })
         .catch(err => {
