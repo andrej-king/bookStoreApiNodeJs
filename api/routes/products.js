@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const multer = require('multer'); // package for save images
 const allowMimeTypes = ['image/jpg', 'image/jpeg', 'image/png'];
 const path = require('path');
+const checkAuth = require('../middleware/checkAuth');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -69,7 +70,7 @@ router.get('/', (req, res, next) => {
         });
 });
 
-router.post('/', upload.single('productImage'), (req, res, next) => {
+router.post('/', upload.single('productImage'), checkAuth, (req, res, next) => {
     if (typeof req.file === 'undefined') {
         return res.status(500).json({
             error: 'File field is empty'
