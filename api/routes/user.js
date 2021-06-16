@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt'); // for crypt password
 const jwt = require('jsonwebtoken'); // for web token (auth)
+const checkAuth = require('../middleware/checkAuth');
 
 const User = require('../models/user');
 
@@ -84,7 +85,18 @@ router.post('/login', (req, res, next) => {
         });
 });
 
-router.delete('/:userId', (req, res, next) => {
+router.get('/', checkAuth, (req, res, next) => {
+    User.find()
+        .then(docs => {
+            res.status(200).json({
+                count: docs.length,
+                user: docs
+            });
+        })
+        .catch();
+});
+
+router.delete('/:userId', checkAuth, (req, res, next) => {
     const id = req.params.userId;
     User.findByIdAndDelete(id)
         .then(result => {
